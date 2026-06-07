@@ -12,7 +12,7 @@ jobs:
   surf-digest:
     name: Digest Diário
     if: github.event.schedule == '0 9 * * *' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -39,7 +39,7 @@ jobs:
   surf-alerts:
     name: Verificar Alertas
     if: github.event.schedule == '0 3,15,21 * * *'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
