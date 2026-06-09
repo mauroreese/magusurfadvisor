@@ -104,7 +104,7 @@ async def fetch_forecasts(beach: Beach) -> list[DayForecast]:
     params = {
         "latitude": beach.lat,
         "longitude": beach.lon,
-        "daily": "wave_height_max,wave_period_max,wind_wave_height_max",
+        "daily": ["wave_height_max", "wave_period_max", "wind_wave_height_max"],
         "timezone": "America/Sao_Paulo",
         "forecast_days": 5,
     }
