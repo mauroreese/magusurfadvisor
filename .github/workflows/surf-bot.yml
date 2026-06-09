@@ -12,21 +12,19 @@ jobs:
   surf-digest:
     name: Digest Diário
     if: github.event.schedule == '0 9 * * *' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
       - name: Instalar dependências
-        run: |
-          pip install -r requirements.txt
-          playwright install --with-deps chromium
+        run: pip install -r requirements.txt
 
       - name: Enviar digest
         env:
@@ -39,22 +37,19 @@ jobs:
   surf-alerts:
     name: Verificar Alertas
     if: github.event.schedule == '0 3,15,21 * * *'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Python 3.11
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
       - name: Instalar dependências
-        run: |
-          pip install -r requirements.txt
-          playwright install chromium
-          playwright install-deps chromium
+        run: pip install -r requirements.txt
 
       - name: Verificar e enviar alertas
         env:
