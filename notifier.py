@@ -73,12 +73,11 @@ def build_daily_digest(forecasts_by_beach: dict[str, list[DayForecast]]) -> str:
         for fc in days_map[day]:
             lines.append(
                 f"  {fc.score_emoji} {fc.beach.name}: *{fc.score_label}* "
-                f"— {fc.wave_height}, {fc.wave_period}, "
-                f"vento {fc.wind_speed} {fc.wind_direction}"
+                f"— {fc.wave_height}, {fc.wave_period}"
             )
         lines.append("")  # linha em branco entre dias
 
-    lines.append("📊 _Fonte: surfguru.com.br_")
+    lines.append("📊 _Fonte: open-meteo.com (Marine API)_")
     return "\n".join(lines)
 
 
@@ -91,8 +90,7 @@ def build_alert_message(good_forecasts: list[DayForecast]) -> str:
     for fc in good_forecasts:
         lines.append(
             f"{fc.score_emoji} *{fc.beach.name}* — {_fmt_date(fc.day)}\n"
-            f"   {fc.score_label} | {fc.wave_height} | {fc.wave_period} | "
-            f"vento {fc.wind_speed} {fc.wind_direction}\n"
+            f"   {fc.score_label} | {fc.wave_height} | {fc.wave_period}\n"
             f"   🔗 {fc.beach.url}\n"
         )
     lines.append("_Confira mais detalhes no Surfguru!_")
