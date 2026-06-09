@@ -38,7 +38,8 @@ async def _run_digest(verbose: bool = False) -> None:
     if ok:
         logger.info("✓ Digest enviado com sucesso.")
     else:
-        logger.error("✗ Falha ao enviar digest.")
+        logger.error("✗ Falha ao enviar digest. Verifique TELEGRAM_BOT_TOKEN e TELEGRAM_CHANNEL_ID.")
+        logger.error("  Dica: o bot precisa ser administrador do canal.")
         sys.exit(1)
 
 
