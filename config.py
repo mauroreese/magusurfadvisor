@@ -37,48 +37,41 @@ FORECAST_DAYS: int = int(os.getenv("FORECAST_DAYS", "5"))
 @dataclass
 class Beach:
     name: str
-    path: str   # ex: "brasil/santa-catarina/itapema/praia-da-ilhota"
+    path: str    # slug do Surfguru (para o link)
+    lat: float   # latitude
+    lon: float   # longitude
 
     @property
     def url(self) -> str:
         return f"https://surfguru.com.br/previsao/{self.path}"
 
     @property
-    def json_url(self) -> str:
-        return f"https://surfguru.space/previsao/{self.path}.json"
-
-    @property
     def slug(self) -> str:
-        """Path completo normalizado — chave única interna (evita colisão entre praias com mesmo nome)."""
         return self.path.replace("/", "_")
 
 
 BEACHES: List[Beach] = [
-    # ── Paraná — URLs confirmadas ────────────────────────────────────────────
-    Beach("Praia de Fora",        "brasil/parana/paranagua/praia-de-fora"),
-    Beach("Praia de Ipanema",     "brasil/parana/pontal-do-parana/praia-de-ipanema"),
-    Beach("Praia Atoleiro",       "brasil/parana/matinhos/praia-atoleiro"),
-    Beach("Praia Matinhos",       "brasil/parana/matinhos/praia-matinhos"),
-    Beach("Praia Guaratuba",      "brasil/parana/guaratuba/praia-guaratuba"),
-    Beach("Praia dos Coroados",   "brasil/parana/guaratuba/praia-dos-coroados"),
-    Beach("Praia da Barra do Saí","brasil/parana/guaratuba/praia-da-barra-do-sai"),
-    # Beach("Ilha do Mel",        "brasil/parana/paranagua/praia-de-fora"),
-    Beach("Caiobá",               "brasil/parana/matinhos/praia-brava"),
-    # ── Santa Catarina — URLs confirmadas ────────────────────────────────────
-    Beach("Praia Navegantes",     "brasil/santa-catarina/navegantes/praia-navegantes"),
-    Beach("Praia Brava (Itajaí)", "brasil/santa-catarina/itajai/praia-brava"),
-    Beach("Oceânica",             "brasil/santa-catarina/balneario-camboriu/oceanica"),
-    Beach("Praia da Ilhota (Plaza)", "brasil/santa-catarina/itapema/praia-da-ilhota"),
-    # ── Santa Catarina — paths a confirmar no Surfguru ───────────────────
-    Beach("Itapoá",               "brasil/santa-catarina/itapoa/praia-itapoa"),
-    Beach("Barra do Sul",         "brasil/santa-catarina/barra-do-sul/barra-do-sul"),
-    Beach("São Francisco do Sul-itaguaçu", "brasil/santa-catarina/sao-francisco-do-sul/praia-itaguacu"),
-    Beach("São Francisco do Sul-grande", "brasil/santa-catarina/sao-francisco-do-sul/praia-grande"),
-
-
-    Beach("Barra Velha",          "brasil/santa-catarina/barra-velha/praia-itajuba"),
-    Beach("Piçarras",             "brasil/santa-catarina/balneario-picarras/praia-de-ponta-do-jacques"),
-    Beach("Penha",                "brasil/santa-catarina/penha/penha"),
+    # ── Paraná ──────────────────────────────────────────────────────────────
+    Beach("Praia de Fora",           "brasil/parana/paranagua/praia-de-fora",                          -25.52, -48.50),
+    Beach("Praia de Ipanema",        "brasil/parana/pontal-do-parana/praia-de-ipanema",                -25.57, -48.35),
+    Beach("Praia Atoleiro",          "brasil/parana/matinhos/praia-atoleiro",                          -25.79, -48.52),
+    Beach("Praia Matinhos",          "brasil/parana/matinhos/praia-matinhos",                          -25.82, -48.54),
+    Beach("Praia Guaratuba",         "brasil/parana/guaratuba/praia-guaratuba",                        -25.88, -48.58),
+    Beach("Praia dos Coroados",      "brasil/parana/guaratuba/praia-dos-coroados",                     -25.90, -48.60),
+    Beach("Praia da Barra do Saí",   "brasil/parana/guaratuba/praia-da-barra-do-sai",                  -26.00, -48.63),
+    Beach("Caiobá",                  "brasil/parana/matinhos/praia-brava",                             -25.84, -48.55),
+    # ── Santa Catarina ───────────────────────────────────────────────────────
+    Beach("Itapoá",                  "brasil/santa-catarina/itapoa/praia-itapoa",                      -26.12, -48.61),
+    Beach("Barra do Sul",            "brasil/santa-catarina/barra-do-sul/barra-do-sul",                -26.46, -48.62),
+    Beach("São Francisco-Itaguaçu",  "brasil/santa-catarina/sao-francisco-do-sul/praia-itaguacu",      -26.23, -48.63),
+    Beach("São Francisco-Grande",    "brasil/santa-catarina/sao-francisco-do-sul/praia-grande",        -26.24, -48.62),
+    Beach("Barra Velha",             "brasil/santa-catarina/barra-velha/praia-itajuba",                -26.64, -48.68),
+    Beach("Piçarras",                "brasil/santa-catarina/balneario-picarras/praia-de-ponta-do-jacques", -26.77, -48.67),
+    Beach("Penha",                   "brasil/santa-catarina/penha/penha",                              -26.77, -48.65),
+    Beach("Praia Navegantes",        "brasil/santa-catarina/navegantes/praia-navegantes",              -26.89, -48.65),
+    Beach("Praia Brava (Itajaí)",    "brasil/santa-catarina/itajai/praia-brava",                       -26.85, -48.63),
+    Beach("Oceânica",                "brasil/santa-catarina/balneario-camboriu/oceanica",               -26.98, -48.63),
+    Beach("Praia da Ilhota (Plaza)", "brasil/santa-catarina/itapema/praia-da-ilhota",                  -27.09, -48.61),
 ]
 
 # Validação de duplicatas de slug em tempo de importação
