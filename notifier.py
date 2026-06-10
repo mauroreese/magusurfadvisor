@@ -24,7 +24,8 @@ def _fmt_date(d: date) -> str:
     return f"{WEEKDAYS_PT[d.weekday()]} {d.day}/{MONTHS_PT[d.month]}"
 
 
-async def send_message(text: str) -> bool:
+async def _send_single(text: str) -> bool:
+    """Envia uma mensagem simples (≤4096 chars)."""
     payload = {
         "chat_id":                  TELEGRAM_CHANNEL_ID,
         "text":                     text,
@@ -39,14 +40,33 @@ async def send_message(text: str) -> bool:
     return True
 
 
+async def send_message(text: str) -> bool:
+    """Envia texto, dividindo automaticamente se passar de 4000 chars."""
+    MAX = 4000
+    if len(text) <= MAX:
+        return await _send_single(text)
+    # Divide no último \n antes do limite
+    parts, remaining = [], text
+    while len(remaining) > MAX:
+        cut = remaining.rfind("\n", 0, MAX)
+        if cut == -1:
+            cut = MAX
+        parts.append(remaining[:cut])
+        remaining = remaining[cut:].lstrip("\n")
+    parts.append(remaining)
+    for part in parts:
+        if not await _send_single(part):
+            return False
+    return True
+
+
 # ---------------------------------------------------------------------------
 # Digest diário
 # ---------------------------------------------------------------------------
-def build_daily_digest(forecasts_by_beach: dict[str, list[DayForecast]]) -> list[str]:
+def build_daily_digest(forecasts_by_beach: dict[str, list[DayForecast]]) -> str:
     """
-    Retorna uma lista de mensagens — uma por dia de previsão.
-    Telegram limita mensagens a 4096 caracteres; 19 praias × 5 dias
-    não cabe em uma única mensagem.
+    Retorna uma única string com toda a previsão.
+    send_message() divide automaticamente se passar de 4000 chars.
     """
     today = date.today()
 
@@ -55,24 +75,17 @@ def build_daily_digest(forecasts_by_beach: dict[str, list[DayForecast]]) -> list
         all_forecasts.extend(days[:FORECAST_DAYS])
 
     if not all_forecasts:
-        return ["⚠️ Não foi possível obter previsões agora. Tente mais tarde."]
+        return "⚠️ Não foi possível obter previsões agora. Tente mais tarde."
 
     days_map: dict[date, list[DayForecast]] = {}
     for fc in all_forecasts:
         days_map.setdefault(fc.day, []).append(fc)
 
-    messages = []
-    sorted_days = sorted(days_map.keys())[:FORECAST_DAYS]
+    lines = ["🏄 *Previsão PR & SC Norte*\n"]
 
-    for idx, day in enumerate(sorted_days):
-        day_label = "HOJE" if day == today else _fmt_date(day)
-        # Cabeçalho: só na 1ª mensagem inclui o título do bot
-        if idx == 0:
-            header = f"🏄 *Previsão PR & SC Norte*\n📅 *{day_label}*\n"
-        else:
-            header = f"📅 *{day_label}*\n"
-
-        lines = [header]
+    for day in sorted(days_map.keys())[:FORECAST_DAYS]:
+        label = "📅 *HOJE*" if day == today else f"📅 *{_fmt_date(day)}*"
+        lines.append(label)
         for fc in days_map[day]:
             extras = fc.extras_str()
             lines.append(
@@ -80,14 +93,10 @@ def build_daily_digest(forecasts_by_beach: dict[str, list[DayForecast]]) -> list
                 f" — {fc.wave_height} / {fc.wave_period} / {fc.swell_dir}"
                 f"{extras}"
             )
+        lines.append("")
 
-        # Rodapé só na última mensagem
-        if idx == len(sorted_days) - 1:
-            lines.append("\n📊 _open-meteo.com_")
-
-        messages.append("\n".join(lines))
-
-    return messages
+    lines.append("📊 _open-meteo.com_")
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
