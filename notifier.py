@@ -42,7 +42,12 @@ async def send_message(text: str) -> bool:
 # ---------------------------------------------------------------------------
 # Digest diário
 # ---------------------------------------------------------------------------
-def build_daily_digest(forecasts_by_beach: dict[str, list[DayForecast]]) -> str:
+def build_daily_digest(forecasts_by_beach: dict[str, list[DayForecast]]) -> list[str]:
+    """
+    Retorna uma lista de mensagens — uma por dia de previsão.
+    Telegram limita mensagens a 4096 caracteres; 19 praias × 5 dias
+    não cabe em uma única mensagem.
+    """
     today = date.today()
 
     all_forecasts: list[DayForecast] = []
@@ -50,28 +55,39 @@ def build_daily_digest(forecasts_by_beach: dict[str, list[DayForecast]]) -> str:
         all_forecasts.extend(days[:FORECAST_DAYS])
 
     if not all_forecasts:
-        return "⚠️ Não foi possível obter previsões agora. Tente mais tarde."
+        return ["⚠️ Não foi possível obter previsões agora. Tente mais tarde."]
 
     days_map: dict[date, list[DayForecast]] = {}
     for fc in all_forecasts:
         days_map.setdefault(fc.day, []).append(fc)
 
-    lines = ["🏄 *Previsão de Ondas — PR & SC Norte*\n"]
+    messages = []
+    sorted_days = sorted(days_map.keys())[:FORECAST_DAYS]
 
-    for day in sorted(days_map.keys())[:FORECAST_DAYS]:
-        label = "📅 *HOJE*" if day == today else f"📅 *{_fmt_date(day)}*"
-        lines.append(label)
+    for idx, day in enumerate(sorted_days):
+        day_label = "HOJE" if day == today else _fmt_date(day)
+        # Cabeçalho: só na 1ª mensagem inclui o título do bot
+        if idx == 0:
+            header = f"🏄 *Previsão PR & SC Norte*\n📅 *{day_label}*\n"
+        else:
+            header = f"📅 *{day_label}*\n"
+
+        lines = [header]
         for fc in days_map[day]:
-            extras = fc.extras_str()   # 💨 e/ou 🌕🌑
+            extras = fc.extras_str()
             lines.append(
                 f"  {fc.score_emoji} {fc.beach.name}: *{fc.score_label}*"
                 f" — {fc.wave_height} / {fc.wave_period} / {fc.swell_dir}"
                 f"{extras}"
             )
-        lines.append("")
 
-    lines.append("📊 _Fonte: open-meteo.com (Marine + Weather API)_")
-    return "\n".join(lines)
+        # Rodapé só na última mensagem
+        if idx == len(sorted_days) - 1:
+            lines.append("\n📊 _open-meteo.com_")
+
+        messages.append("\n".join(lines))
+
+    return messages
 
 
 # ---------------------------------------------------------------------------
