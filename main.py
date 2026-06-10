@@ -27,20 +27,28 @@ async def _run_digest(verbose: bool = False) -> None:
 
     logger.info("Buscando previsões para digest diário...")
     forecasts = await fetch_all(BEACHES)
-    msg = build_daily_digest(forecasts)
+    messages = build_daily_digest(forecasts)   # lista de mensagens, uma por dia
 
     if verbose:
-        print("\n" + "=" * 60)
-        print(msg)
+        for msg in messages:
+            print("\n" + "=" * 60)
+            print(msg)
         print("=" * 60 + "\n")
 
-    ok = await send_message(msg)
-    if ok:
-        logger.info("✓ Digest enviado com sucesso.")
-    else:
-        logger.error("✗ Falha ao enviar digest. Verifique TELEGRAM_BOT_TOKEN e TELEGRAM_CHANNEL_ID.")
+    failed = 0
+    for i, msg in enumerate(messages):
+        ok = await send_message(msg)
+        if ok:
+            logger.info("✓ Mensagem %d/%d enviada.", i + 1, len(messages))
+        else:
+            logger.error("✗ Falha na mensagem %d/%d.", i + 1, len(messages))
+            failed += 1
+
+    if failed:
         logger.error("  Dica: o bot precisa ser administrador do canal.")
         sys.exit(1)
+    else:
+        logger.info("✓ Digest completo (%d mensagens).", len(messages))
 
 
 async def _run_alerts() -> None:
