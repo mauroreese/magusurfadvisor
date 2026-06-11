@@ -189,7 +189,7 @@ async def _fetch_marine(beach: Beach, client: httpx.AsyncClient) -> dict | None:
             "swell_wave_direction_dominant",
         ],
         "timezone":     "America/Sao_Paulo",
-        "forecast_days": 5,
+        "forecast_days": 6,
     }
     try:
         r = await client.get(MARINE_API, params=params)
@@ -207,7 +207,7 @@ async def _fetch_weather(beach: Beach, client: httpx.AsyncClient) -> dict | None
         "hourly": ["wind_speed_10m", "wind_direction_10m"],
         "wind_speed_unit": "kmh",
         "timezone":     "America/Sao_Paulo",
-        "forecast_days": 5,
+        "forecast_days": 6,
     }
     try:
         r = await client.get(WEATHER_API, params=params)
@@ -241,8 +241,13 @@ def _parse_response(
     def _safe(lst, i):
         return lst[i] if i < len(lst) else None
 
+    today = date.today()
     for i, date_str in enumerate(dates):
         try:
+            d = date.fromisoformat(date_str)
+            if d <= today:
+                continue  # pula hoje e qualquer dia passado; previsão começa amanhã
+
             h  = float(_safe(heights, i) or 0)
             p  = float(_safe(periods, i) or 0)
             ww = float(_safe(ww_list, i) or 0)
@@ -258,7 +263,6 @@ def _parse_response(
 
             terral = _terral_bonus(wind_speed, wind_dir, i)
 
-            d = date.fromisoformat(date_str)
             moon_b, moon_label = _moon_info(d)
 
             score = _compute_score(h, p, ww, sb, terral, moon_b)

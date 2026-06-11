@@ -81,10 +81,10 @@ def build_daily_digest(forecasts_by_beach: dict[str, list[DayForecast]]) -> str:
     for fc in all_forecasts:
         days_map.setdefault(fc.day, []).append(fc)
 
-    lines = ["🏄 *Previsão PR & SC Norte*\n"]
+    lines = ["🏄 *Previsão PR & SC Norte — próximos 5 dias*\n"]
 
     for day in sorted(days_map.keys())[:FORECAST_DAYS]:
-        label = "📅 *HOJE*" if day == today else f"📅 *{_fmt_date(day)}*"
+        label = f"📅 *{_fmt_date(day)}*"
         lines.append(label)
         for fc in days_map[day]:
             extras = fc.extras_str()
