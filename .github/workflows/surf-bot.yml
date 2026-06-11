@@ -2,16 +2,19 @@ name: Surf Bot
 
 on:
   schedule:
-    # Digest diário às 06:00 BRT (= 09:00 UTC)
-    - cron: "0 9 * * *"
-    # Verificação de alertas a cada 6h: 03, 15, 21 UTC (00, 12, 18 BRT)
-    - cron: "0 3,15,21 * * *"
-  workflow_dispatch:  # permite rodar manualmente pelo GitHub
+    # Roda às 03, 09, 15, 21 UTC → 00, 06, 12, 18 BRT
+    # O script detecta se é 09 UTC para enviar o digest; demais horas = alertas
+    - cron: "0 3,9,15,21 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Modo: digest ou alerts'
+        required: false
+        default: 'digest'
 
 jobs:
-  surf-digest:
-    name: Digest Diário
-    if: github.event.schedule == '0 9 * * *' || github.event_name == 'workflow_dispatch'
+  surf-bot:
+    name: Surf Bot
     runs-on: ubuntu-latest
 
     steps:
@@ -26,35 +29,24 @@ jobs:
       - name: Instalar dependências
         run: pip install -r requirements.txt
 
-      - name: Enviar digest
+      - name: Executar bot
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
           FORECAST_DAYS: "5"
           MIN_ALERT_SCORE: "2"
-        run: python main.py --digest
+        run: |
+          HOUR=$(date -u +%H)
+          MODE="${{ github.event.inputs.mode }}"
 
-  surf-alerts:
-    name: Verificar Alertas
-    if: github.event.schedule == '0 3,15,21 * * *'
-    runs-on: ubuntu-latest
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            # Rodando manualmente: usa o input (padrão: digest)
+            MODE="${MODE:-digest}"
+          elif [ "$HOUR" = "09" ]; then
+            MODE="digest"
+          else
+            MODE="alerts"
+          fi
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Python 3.11
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-
-      - name: Instalar dependências
-        run: pip install -r requirements.txt
-
-      - name: Verificar e enviar alertas
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
-          FORECAST_DAYS: "5"
-          MIN_ALERT_SCORE: "2"
-        run: python main.py --alerts
+          echo "Modo selecionado: $MODE (hora UTC: $HOUR)"
+          python main.py --$MODE
