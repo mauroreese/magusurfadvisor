@@ -8,7 +8,7 @@ from datetime import date
 
 import httpx
 
-from config import TELEGRAM_TOKEN, TELEGRAM_CHANNEL_ID, FORECAST_DAYS, MIN_ALERT_SCORE_INDEX
+from config import TELEGRAM_TOKEN, TELEGRAM_CHANNEL_ID, FORECAST_DAYS, MIN_ALERT_SCORE_INDEX, BEACH_GROUPS
 from scraper import DayForecast
 
 logger = logging.getLogger(__name__)
@@ -63,40 +63,47 @@ async def send_message(text: str) -> bool:
 # ---------------------------------------------------------------------------
 # Digest diário
 # ---------------------------------------------------------------------------
-def build_daily_digest(forecasts_by_beach: dict[str, list[DayForecast]]) -> str:
-    """
-    Retorna uma única string com toda a previsão.
-    send_message() divide automaticamente se passar de 4000 chars.
-    """
-    today = date.today()
+def _build_group_message(
+    group_name: str,
+    beaches: list,
+    forecasts_by_beach: dict[str, list[DayForecast]],
+) -> str:
+    """Monta uma mensagem para um grupo de praias (um estado/região)."""
+    # Coleta e organiza por dia
+    all_fc: list[DayForecast] = []
+    for beach in beaches:
+        all_fc.extend(forecasts_by_beach.get(beach.slug, [])[:FORECAST_DAYS])
 
-    all_forecasts: list[DayForecast] = []
-    for days in forecasts_by_beach.values():
-        all_forecasts.extend(days[:FORECAST_DAYS])
-
-    if not all_forecasts:
-        return "⚠️ Não foi possível obter previsões agora. Tente mais tarde."
+    if not all_fc:
+        return f"*{group_name}*\n⚠️ Sem dados disponíveis.\n"
 
     days_map: dict[date, list[DayForecast]] = {}
-    for fc in all_forecasts:
+    for fc in all_fc:
         days_map.setdefault(fc.day, []).append(fc)
 
-    lines = ["🏄 *Previsão PR & SC Norte — próximos 5 dias*\n"]
-
+    lines = [f"*{group_name} — próximos 5 dias*\n"]
     for day in sorted(days_map.keys())[:FORECAST_DAYS]:
-        label = f"📅 *{_fmt_date(day)}*"
-        lines.append(label)
+        lines.append(f"📅 *{_fmt_date(day)}*")
         for fc in days_map[day]:
-            extras = fc.extras_str()
             lines.append(
                 f"  {fc.score_emoji} {fc.beach.name}: *{fc.score_label}*"
                 f" — {fc.wave_height} / {fc.wave_period} / {fc.swell_dir}"
-                f"{extras}"
+                f"{fc.extras_str()}"
             )
         lines.append("")
-
     lines.append("📊 _open-meteo.com_")
     return "\n".join(lines)
+
+
+def build_daily_digest(forecasts_by_beach: dict[str, list[DayForecast]]) -> list[str]:
+    """
+    Retorna uma lista de strings — uma mensagem por grupo de praias.
+    Cada mensagem é enviada separadamente pelo Telegram.
+    """
+    messages = []
+    for group_name, beaches in BEACH_GROUPS:
+        messages.append(_build_group_message(group_name, beaches, forecasts_by_beach))
+    return messages
 
 
 # ---------------------------------------------------------------------------

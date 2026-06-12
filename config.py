@@ -50,29 +50,36 @@ class Beach:
         return self.path.replace("/", "_")
 
 
-BEACHES: List[Beach] = [
-    # ── Paraná ──────────────────────────────────────────────────────────────
-    Beach("Praia de Fora",           "brasil/parana/paranagua/praia-de-fora",                          -25.52, -48.50),
-    Beach("Praia de Ipanema",        "brasil/parana/pontal-do-parana/praia-de-ipanema",                -25.57, -48.35),
-    Beach("Praia Atoleiro",          "brasil/parana/matinhos/praia-atoleiro",                          -25.79, -48.52),
-    Beach("Praia Matinhos",          "brasil/parana/matinhos/praia-matinhos",                          -25.82, -48.54),
-    Beach("Praia Guaratuba",         "brasil/parana/guaratuba/praia-guaratuba",                        -25.88, -48.58),
-    Beach("Praia dos Coroados",      "brasil/parana/guaratuba/praia-dos-coroados",                     -25.90, -48.60),
-    Beach("Praia da Barra do Saí",   "brasil/parana/guaratuba/praia-da-barra-do-sai",                  -26.00, -48.63),
-    Beach("Caiobá",                  "brasil/parana/matinhos/praia-brava",                             -25.84, -48.55),
-    # ── Santa Catarina ───────────────────────────────────────────────────────
-    Beach("Itapoá",                  "brasil/santa-catarina/itapoa/praia-itapoa",                      -26.12, -48.61),
-    Beach("Barra do Sul",            "brasil/santa-catarina/barra-do-sul/barra-do-sul",                -26.46, -48.62),
-    Beach("São Francisco-Itaguaçu",  "brasil/santa-catarina/sao-francisco-do-sul/praia-itaguacu",      -26.23, -48.63),
-    Beach("São Francisco-Grande",    "brasil/santa-catarina/sao-francisco-do-sul/praia-grande",        -26.24, -48.62),
-    Beach("Barra Velha",             "brasil/santa-catarina/barra-velha/praia-itajuba",                -26.64, -48.68),
-    Beach("Piçarras",                "brasil/santa-catarina/balneario-picarras/praia-de-ponta-do-jacques", -26.77, -48.67),
-    Beach("Penha",                   "brasil/santa-catarina/penha/penha",                              -26.77, -48.65),
-    Beach("Praia Navegantes",        "brasil/santa-catarina/navegantes/praia-navegantes",              -26.89, -48.65),
-    Beach("Praia Brava (Itajaí)",    "brasil/santa-catarina/itajai/praia-brava",                       -26.85, -48.63),
-    Beach("Oceânica",                "brasil/santa-catarina/balneario-camboriu/oceanica",               -26.98, -48.63),
-    Beach("Praia da Ilhota (Plaza)", "brasil/santa-catarina/itapema/praia-da-ilhota",                  -27.09, -48.61),
+# ---------------------------------------------------------------------------
+# Grupos de praias: cada grupo gera uma mensagem separada no digest
+# ---------------------------------------------------------------------------
+BEACH_GROUPS: List[tuple] = [
+    # (nome_do_grupo, [praias])
+    ("🏄 Paraná Norte", [
+        Beach("Praia de Fora",         "brasil/parana/paranagua/praia-de-fora",             -25.52, -48.50),
+        Beach("Praia de Ipanema",      "brasil/parana/pontal-do-parana/praia-de-ipanema",   -25.57, -48.35),
+        Beach("Praia Atoleiro",        "brasil/parana/matinhos/praia-atoleiro",             -25.79, -48.52),
+        Beach("Praia Matinhos",        "brasil/parana/matinhos/praia-matinhos",             -25.82, -48.54),
+    ]),
+    ("🏄 Paraná Sul", [
+        Beach("Praia Guaratuba",       "brasil/parana/guaratuba/praia-guaratuba",           -25.88, -48.58),
+        Beach("Praia dos Coroados",    "brasil/parana/guaratuba/praia-dos-coroados",        -25.90, -48.60),
+        Beach("Praia da Barra do Saí", "brasil/parana/guaratuba/praia-da-barra-do-sai",    -26.00, -48.63),
+    ]),
+    ("🏄 Santa Catarina", [
+        Beach("Itapoá",                "brasil/santa-catarina/itapoa/praia-itapoa",         -26.12, -48.61),
+        Beach("São Francisco-Grande",  "brasil/santa-catarina/sao-francisco-do-sul/praia-grande", -26.24, -48.62),
+        Beach("Barra do Sul",          "brasil/santa-catarina/barra-do-sul/barra-do-sul",   -26.46, -48.62),
+        Beach("Penha",                 "brasil/santa-catarina/penha/penha",                 -26.77, -48.65),
+        Beach("Praia Brava (Itajaí)",  "brasil/santa-catarina/itajai/praia-brava",          -26.85, -48.63),
+        Beach("Praia Navegantes",      "brasil/santa-catarina/navegantes/praia-navegantes", -26.89, -48.65),
+        Beach("Oceânica",              "brasil/santa-catarina/balneario-camboriu/oceanica", -26.98, -48.63),
+        Beach("Praia da Ilhota (Plaza)","brasil/santa-catarina/itapema/praia-da-ilhota",    -27.09, -48.61),
+    ]),
 ]
+
+# Lista plana para uso no scraper
+BEACHES: List[Beach] = [b for _, beaches in BEACH_GROUPS for b in beaches]
 
 # Validação de duplicatas de slug em tempo de importação
 _slugs = [b.slug for b in BEACHES]
